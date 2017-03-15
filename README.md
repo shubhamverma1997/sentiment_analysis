@@ -13,3 +13,6 @@ And voila ! tweet_stream.py starts streaming live tweets on the entered topic an
 
 More features to be added soon .
 
+Edit 1 (15/03/17)
+Random walk algorithm added to the repository for building a wordnet from some seed words and simultaneously adding seed words into it .
+
