@@ -3,7 +3,34 @@ from nltk.corpus import wordnet as wn
 import networkx as nx
 import matplotlib.pyplot as plt
 from textblob import Word
+from numpy.random import choice
 
+
+def random_W(w,graph):
+
+	nbrs=graph.neighbors(w)
+	transit = []
+	wtsum=0
+	for nb in nbrs:
+		wt=Word(w).synsets[0].path_similarity(Word(nb).synsets[0])
+		if wt==None:
+			wt=0.1
+		wtsum=wtsum+wt
+
+	for nb in nbrs:
+		wt=Word(w).synsets[0].path_similarity(Word(nb).synsets[0])
+		if wt==None:
+			wt=0.1
+		transit.append(wt/wtsum)
+
+	if len(nbrs):			
+		draw = choice(nbrs, 1, p=transit)
+		for seed in seedList:
+			if draw==seed[0]:
+				return seed[1]
+		random_W(draw,graph)
+	else:
+		return 0
 
 if __name__ == "__main__":
 
@@ -23,10 +50,7 @@ if __name__ == "__main__":
 				word=syn.lemma_names()[0]
 				if word not in graph.nodes():
 					graph.add_node(word)
-					wt=syn.path_similarity(Word(a).synsets[0])
-					if wt==None:
-						wt=0
-					graph.add_edge(a,word,weight=round(wt,2))
+					graph.add_edge(a,word)
 					temp.append(word)
 
 			syn=Word(a).synsets[0]
@@ -36,28 +60,19 @@ if __name__ == "__main__":
 				for anyt in l.antonyms():
 					if anyt.name() not in graph.nodes():						
 						graph.add_node(anyt.name())		#antonyms
-						wt=syn.path_similarity(Word(anyt.name()).synsets[0])
-						if wt==None:
-							wt=0
-						graph.add_edge(a,anyt.name(),weight=round(wt,2))
+						graph.add_edge(a,anyt.name())
 						temp.append(anyt.name())
 
 			for hypr in syn.hypernyms():
 				if hypr.lemma_names()[0] not in graph.nodes():
 					graph.add_node(hypr.lemma_names()[0])	#hypernyms
-					wt=syn.path_similarity(Word(hypr.lemma_names()[0]).synsets[0])
-					if wt==None:
-						wt=0
-					graph.add_edge(a,hypr.lemma_names()[0],weight=round(wt,2))
+					graph.add_edge(a,hypr.lemma_names()[0])
 					temp.append(hypr.lemma_names()[0])
 
 			for hypo in syn.hyponyms():
 				if hypo.lemma_names()[0] not in graph.nodes():					
 					graph.add_node(hypo.lemma_names()[0]) 	#hyponyms
-					wt=syn.path_similarity(Word(hypo.lemma_names()[0]).synsets[0])
-					if wt==None:
-						wt=0
-					graph.add_edge(a,hypo.lemma_names()[0],weight=round(wt,2))
+					graph.add_edge(a,hypo.lemma_names()[0])
 					temp.append(hypo.lemma_names()[0])
 
 			adjList=temp
@@ -66,6 +81,31 @@ if __name__ == "__main__":
 	nx.draw(graph,pos=nx.random_layout(graph),with_labels=True, node_color='#ADD8E6', font_size=5, width=0.2, alpha=0.4)
 
 	plt.savefig("RnWalk.png", dpi=1000)
+
+	known = seedList
+	unknown = []
+	for w in graph.nodes():
+		if w not in known:
+			unknown.append(w)
+
+	for w in unknown:
+		avg_pos=0
+		avg_neg=0
+		m=1
+		while m<=5:
+			score=random_W(w,graph)
+			if score>0:
+				avg_pos=avg_pos+score
+			else:
+				avg_neg=avg_neg+score
+			m=m+1
+		if avg_pos>avg_neg:
+			seedList.append([w,1])
+		else:
+			seedList.append([w,-1])
+
+	print(seedList)
+
 
 
 
