@@ -1,10 +1,25 @@
 import nltk
 from nltk.corpus import wordnet as wn
+from nltk import pos_tag,word_tokenize
 import networkx as nx
 import matplotlib.pyplot as plt
 from textblob import Word
 from random import choice
 import numpy as np
+
+
+def tag2letter(word):
+	print('here')
+	t=pos_tag(word_tokenize(word))
+	if t[0][1]=='JJ':
+		return 'a'
+	elif t[0][1]=='NN':
+		return 'n'
+	elif t[0][1]=='VB':
+		return 'v'
+	else:
+		return '1'
+
 
 def transit_P (i,j,graph):
 	nbrs=graph.neighbors(i)
@@ -62,7 +77,10 @@ if __name__ == "__main__":
 				word=syn.lemma_names()[0]
 				if word not in graph.nodes():
 					graph.add_node(word)
-					graph.add_edge(a,word,weight=1)
+					word1=wn.synset(a[0]+'.n.01')
+					word2=wn.synset(word[0]+'.n.01')
+					w=wn.path_similarity(word1,word2)
+					graph.add_edge(a,word,weight=w)
 					temp.append(word)
 
 			syn=Word(a).synsets[0]
@@ -70,15 +88,45 @@ if __name__ == "__main__":
 			l=syn.lemmas()[0]
 			if l.antonyms():
 				for anyt in l.antonyms():
-					if anyt.name() not in graph.nodes():						
+					if anyt.name() not in graph.nodes():		
 						graph.add_node(anyt.name())		#antonyms
-						graph.add_edge(a,anyt.name(),weight=0.1)
+						
 						temp.append(anyt.name())
+						print('------------------------------------')
+						print(anyt.name())				
+						print('------------------------------------')
+						#wtag=pos_tag(word_tokenize(anyt.name()))
+						#wn_tag=penn_to_wn(wtag)
+						#lemma = lemmatzr.lemmatize(wtag[0], pos=wn_tag)
+						#word2=wn.synsets(lemma,pos=wn_tag)
+						tg=tag2letter(anyt.name())
+						print('back')
+						if tg=='1':
+							continue
+
+						try:
+							word2=wn.synset(anyt.name()+'.'+tg+'.01');
+						except:
+							graph.add_edge(a,anyt.name(),weight=0.1)
+							continue
+						else:
+							word1=wn.synset(a[0]+'.n.01')
+						#word2=wn.synset(word2)
+							w=wn.path_similarity(word1,word2)						
+							graph.add_edge(a,anyt.name(),weight=w)
+
 
 			for hypr in syn.hypernyms():
 				if hypr.lemma_names()[0] not in graph.nodes():
+
+					word1=wn.synset(a[0]+'.n.01')
+					#temp1=hypr.lemma_names()[0]
+
+					#word2=wn.synset(temp1)
+					
+					#w=wn.path_similarity(word1,word2)
 					graph.add_node(hypr.lemma_names()[0])	#hypernyms
-					graph.add_edge(a,hypr.lemma_names()[0],weight=0.5)
+					graph.add_edge(a,hypr.lemma_names()[0],weight=0.3)
 					temp.append(hypr.lemma_names()[0])
 
 			for hypo in syn.hyponyms():
