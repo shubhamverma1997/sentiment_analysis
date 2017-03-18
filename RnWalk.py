@@ -5,8 +5,6 @@ import matplotlib.pyplot as plt
 from textblob import Word
 from random import choice
 import numpy as np
-from random import random
-from bisect import bisect
 
 def transit_P (i,j,graph):
 	nbrs=graph.neighbors(i)
@@ -17,28 +15,34 @@ def transit_P (i,j,graph):
 	return graph[i][j]['weight']/wtsum
 
 def hit2plus(i,splus,graph,count):
-	if i in splus:
-		return count
-	elif len(graph.neighbors(i))==0:
-		return 0
+	if count<=5:
+		if i in splus:
+			return count
+		elif len(graph.neighbors(i))==0:
+			return 0
+		else:
+			probs = []
+			for j in graph.neighbors(i):
+				probs.append(transit_P(i,j,graph))
+			draw = np.random.choice(graph.neighbors(i), p=probs)
+			return hit2plus(draw,splus,graph,count+1)
 	else:
-		probs = []
-		for j in graph.neighbors(i):
-			probs.append(transit_P(i,j,graph))
-		draw = np.random.choice(graph.neighbors(i), p=probs)
-		return hit2plus(draw,splus,graph,count+1)	
+		return count
 
 def hit2minus(i,sminus,graph,count):
-	if i in sminus:
-		return count
-	elif len(graph.neighbors(i))==0:
-		return 0
+	if count<=5:
+		if i in sminus:
+			return count
+		elif len(graph.neighbors(i))==0:
+			return 0
+		else:
+			probs = []
+			for j in graph.neighbors(i):
+				probs.append(transit_P(i,j,graph))
+			draw = np.random.choice(graph.neighbors(i), p=probs)
+			return hit2minus(draw,sminus,graph,count+1)
 	else:
-		probs = []
-		for j in graph.neighbors(i):
-			probs.append(transit_P(i,j,graph))
-		draw = np.random.choice(graph.neighbors(i), p=probs)
-		return hit2minus(draw,sminus,graph,count+1)	
+		return count	
 
 if __name__ == "__main__":
 
@@ -112,25 +116,27 @@ if __name__ == "__main__":
 			unknown.append(w)
 
 	for w in unknown:
-		avg_pos=0
-		avg_neg=0
+		pos_htime=0
+		neg_htime=0
 		k=1
 		while k<=5:
 			htime=hit2plus(w,splus,graph,0)
-			avg_pos=avg_pos+htime
+			pos_htime=pos_htime+htime
 			k=k+1
-		avg_pos=avg_pos/5
+		pos_htime=pos_htime/5
 
 		k=1
 		while k<=5:
 			htime=hit2minus(w,sminus,graph,0)
-			avg_neg=avg_neg+htime
+			neg_htime=neg_htime+htime
+			k=k+1
+		neg_htime=neg_htime/5
 
-		avg_neg=avg_neg/5
-
-		if avg_pos>avg_neg:
+		if pos_htime<neg_htime:
 			seedList.append([w,1])
-		else:
+		elif pos_htime>neg_htime:
 			seedList.append([w,-1])
+		else:
+			seedList.append([w,0])
 
-	# print(seedList)
+	print(seedList)
