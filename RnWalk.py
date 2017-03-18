@@ -46,7 +46,7 @@ def hit2minus(i,sminus,graph,count):
 
 if __name__ == "__main__":
 
-	seedList = [['good', 1],['bad', -1], ['Love', 1], ['hate', -1]]
+	seedList = [['good', 1],['bad', -1], ['Love', 1], ['hate', -1],['right',1],['wrong',-1]]
 	graph=nx.Graph()
 	adjList= []
 
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 		adjList.append(seed[0])		
 	
 	i=1
-	while i<=1:
+	while i<=2:
 		temp = []	
 		for a in adjList:			
 			for syn in wn.synsets(a):				#synonyms
@@ -72,29 +72,24 @@ if __name__ == "__main__":
 				for anyt in l.antonyms():
 					if anyt.name() not in graph.nodes():						
 						graph.add_node(anyt.name())		#antonyms
-						graph.add_edge(a,anyt.name(),weight=-1)
+						graph.add_edge(a,anyt.name(),weight=0.1)
 						temp.append(anyt.name())
 
 			for hypr in syn.hypernyms():
 				if hypr.lemma_names()[0] not in graph.nodes():
 					graph.add_node(hypr.lemma_names()[0])	#hypernyms
-					graph.add_edge(a,hypr.lemma_names()[0],weight=1)
+					graph.add_edge(a,hypr.lemma_names()[0],weight=0.5)
 					temp.append(hypr.lemma_names()[0])
 
 			for hypo in syn.hyponyms():
 				if hypo.lemma_names()[0] not in graph.nodes():					
 					graph.add_node(hypo.lemma_names()[0]) 	#hyponyms
-					graph.add_edge(a,hypo.lemma_names()[0],weight=1)
+					graph.add_edge(a,hypo.lemma_names()[0],weight=0.5)
 					temp.append(hypo.lemma_names()[0])
 
 			adjList=temp
 
 		i=i+1
-
-	for m in graph.nodes():
-		for n in graph.nodes():
-			if graph.has_edge(m,n)==False:
-				graph.add_edge(m,n,weight=0)
 
 	nx.draw(graph,pos=nx.random_layout(graph),with_labels=True, node_color='#ADD8E6', font_size=5, width=0.2, alpha=0.4)
 
@@ -134,8 +129,10 @@ if __name__ == "__main__":
 
 		if pos_htime<neg_htime:
 			seedList.append([w,1])
-		elif pos_htime>neg_htime:
+			splus.append(w)
+		elif neg_htime<pos_htime:
 			seedList.append([w,-1])
+			sminus.append(w)
 		else:
 			seedList.append([w,0])
 
