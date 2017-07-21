@@ -42,6 +42,18 @@ def hit2minus(i,sminus,graph,count):
     else:
         return count
 if __name__ == "__main__":
+
+    acceptedRelations=[]
+    acceptedRelations.append('IsA')
+    acceptedRelations.append('CapableOf')
+    acceptedRelations.append('UsedFor')
+    acceptedRelations.append('FormOf')
+    acceptedRelations.append('RelatedTo')
+    acceptedRelations.append('Causes')
+    acceptedRelations.append('HasProperty')
+    acceptedRelations.append('Synonym')
+    acceptedRelations.append('Antonym')
+    
     seedList = [['good', 1],['bad', -1], ['Love', 1], ['hate', -1],['right',1],['wrong',-1]]
     known=[]
     splus=[]
@@ -66,18 +78,35 @@ if __name__ == "__main__":
         addedwords=[]
         for k in known:
             counter=0
-            obj=requests.get('http://api.conceptnet.io/related/c/en/'+k+'?filter=/c/en').json()
-            related=obj['related']
+            obj=requests.get('http://api.conceptnet.io/c/en/'+k+'?filter=/c/en').json()
+            related=obj['edges']
+
+
             for re in related:
+                end=re['end']
+                start=re['start']
                 if counter>10:
                     break
-                word=re['@id']
-                if word[6:] not in addedwords:
-                    addedwords.append(word[6:])
-                    graph.add_node(word[6:])
-                newword=str(word[6:])
+                word=end['label']
+                if word not in addedwords:
+                    r=re['rel']
+                    if r['label'] in acceptedRelations:
+                        addedwords.append(word)
+                        graph.add_node(word)
+                
+                newword=str(word)
                 graph.add_edge(k,newword,weight=re['weight'])
-                counter=counter+1    
+                counter=counter+1   
+
+                word=start['label']
+                if word not in addedwords:
+                    r=re['rel']
+                    if r['label'] in acceptedRelations:
+                        addedwords.append(word)
+                        graph.add_node(word)
+                newword=str(word)
+                graph.add_edge(k,newword,weight=re['weight'])
+                counter=counter+1   
         known=addedwords
         i=i+1
     nx.draw(graph,pos=nx.random_layout(graph),with_labels=True, node_color='#ADD8E6', font_size=5, width=0.2, alpha=0.4)
